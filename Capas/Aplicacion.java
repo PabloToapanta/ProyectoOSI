@@ -12,7 +12,7 @@ public class Aplicacion {
             );
         }
 
-        String cabecera = String.format("[%s|POST mensaje]", NOMBRE_CAPA);
+        String cabecera = String.format("[%s|Enviar mensaje]", NOMBRE_CAPA);
         PDU pduAplicacion = new PDU(cabecera, mensajeUsuario);
 
         System.out.printf("ENVIO DE APLICACION (Capa 7):\nDato original: %s\nTamaño: %d bytes\nCabecera añadida: %s\n\n",
