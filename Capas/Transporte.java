@@ -6,7 +6,7 @@ import java.util.List;
 public class Transporte {
     private static final String NOMBRE_CAPA = "TRANSPORTE";
     private static final int PUERTO_ORIGEN = 35468;
-    private static final int PUERTO_DESTINO = 80;
+    private static final int PUERTO_DESTINO = 35332;
 
     public PDU encapsular(PDU pduSesion) {
         String cabecera = String.format("[%s|pOrigen=%d|pDestino=%d|ControlError=Activo]", 
