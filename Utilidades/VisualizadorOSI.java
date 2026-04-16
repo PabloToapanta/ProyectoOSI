@@ -12,7 +12,7 @@ public class VisualizadorOSI {
         
         // Usamos un formato multilinea para que se vean todos los paquetes/tramas
         System.out.println("\n [>] ENTRADA   :\n" + indentar(entrada));
-        System.out.println("\n [>] METADATOS :\n" + indentar(metadatos));
+        System.out.println("\n [>] CABECERA :\n" + indentar(metadatos));
         System.out.println("\n [>] SALIDA    :\n" + indentar(salida));
         System.out.println("========================================================================");
     }

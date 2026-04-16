@@ -52,6 +52,7 @@ public class Transporte extends CapaOSI {
             datosReensamblados.append(segmento.getDatos());
         }
         
+        
         String datosCompletos = datosReensamblados.toString();
         
         // Los datos reensamblados empiezan con [TRANSPORTE|...]

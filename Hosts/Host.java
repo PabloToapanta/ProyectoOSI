@@ -57,8 +57,8 @@ public class Host {
 
     /**
      * Proceso de emisión de datos (Flujo de bajada: Capas 7 a 1).
-     * Aplica el principio de Separación de Responsabilidades: las capas solo hacen 
-     * cálculos y devuelven objetos, mientras que este método recoge esos objetos 
+     * Aplica el principio de Separación de Responsabilidades: las capas solo hacen
+     * cálculos y devuelven objetos, mientras que este método recoge esos objetos
      * y se los pasa al VisualizadorOSI para dibujarlos en consola.
      */
     public void enviarDatos(String mensajeUsuario, Host destinatario) {
@@ -131,7 +131,6 @@ public class Host {
         System.out.println("--- DATOS ENVIADOS AL CABLE EXITOSAMENTE ---\n");
     }
 
-
     /**
      * Proceso de recepción de datos (Flujo de subida: Capas 1 a 7).
      * Funciona desenvolviendo progresivamente las capas de datos.
@@ -149,6 +148,7 @@ public class Host {
                 tramasFisica.append(tr.getCompleto()).append("\n");
             }
 
+            
             VisualizadorOSI.imprimirPanel("1 - FISICA", "Recepción",
                     "Lectura de bits (deserialización) desde el medio físico (cable.bin).",
                     "Archivo: cable.bin", "Formato Binario", tramasFisica.toString().trim());
@@ -163,7 +163,8 @@ public class Host {
 
             VisualizadorOSI.imprimirPanel("2 - ENLACE", "Recepción",
                     "Verificación de integridad matemática y eliminacion de cabecera MAC.",
-                    tramasFisica.toString().trim(), p1.get(0).getCabecera() + " (Cabeceras MAC)",
+                    tramasFisica.toString().trim(),
+                    p1.get(0).getCabecera() + " (Cabeceras MAC)",
                     paquetesEnlace.toString().trim());
 
             // CAPA 3: RED
@@ -174,38 +175,62 @@ public class Host {
                 segmentosRed.append(seg.getCompleto()).append("\n");
             }
 
+            //Extraemos la cabecera IP leyendo hasta el primer corchete "]"
+            String cabeceraRed = p2.get(0).getDatos().substring(0, p2.get(0).getDatos().indexOf("]") + 1);
+
             VisualizadorOSI.imprimirPanel("3 - RED", "Recepción",
                     "Eliminacion de cabeceras IP ",
-                    paquetesEnlace.toString().trim(), p2.get(0).getCabecera() + " (Cabeceras IP)",
+                    paquetesEnlace.toString().trim(),
+                    cabeceraRed + " (Cabeceras IP)",
                     segmentosRed.toString().trim());
 
             // CAPA 4: TRANSPORTE
             Datos p4 = capa4.desencapsular(p3);
 
+            // xtraemos la cabecera Transporte
+            String cabeceraTransporte = p3.get(0).getDatos().substring(0, p3.get(0).getDatos().indexOf("]") + 1);
+
             VisualizadorOSI.imprimirPanel("4 - TRANSPORTE", "Recepción",
                     "Reensamblado de los " + p3.size() + " fragmentos ",
-                    segmentosRed.toString().trim(), p3.get(0).getCabecera() + " (Cabeceras TCP/UDP)", p4.getCompleto());
+                    segmentosRed.toString().trim(),
+                    cabeceraTransporte + " (Cabecera Transporte)",
+                    p4.getCompleto());
 
             // CAPA 5: SESIÓN
             Datos p5 = capa5.desencapsular(p4, this.getNombre());
 
+            // Extraemos la cabecera de Sesión
+            String cabeceraSesion = p4.getCompleto().substring(0, p4.getCompleto().indexOf("]") + 1);
+
             VisualizadorOSI.imprimirPanel("5 - SESION", "Recepción",
                     "Validación del destinatario para mantener la sesión lógica autorizada.",
-                    p4.getCompleto(), p4.getCabecera(), p5.getCompleto());
+                    p4.getCompleto(),
+                    cabeceraSesion,
+                    p5.getCompleto());
 
             // CAPA 6: PRESENTACIÓN
             Datos p6 = capa6.desencapsular(p5);
 
+            // Extraemos la cabecera de Presentación
+            String cabeceraPresentacion = p5.getCompleto().substring(0, p5.getCompleto().indexOf("]") + 1);
+
             VisualizadorOSI.imprimirPanel("6 - PRESENTACION", "Recepción",
                     "Decodificación de los datos (de Base64 a texto plano).",
-                    p5.getCompleto(), p5.getCabecera(), p6.getCompleto());
+                    p5.getCompleto(),
+                    cabeceraPresentacion,
+                    p6.getCompleto());
 
             // CAPA 7: APLICACIÓN
             String p7 = capa7.desencapsular(p6);
 
+            // Extraemos la cabecera de Aplicación
+            String cabeceraAplicacion = p6.getCompleto().substring(0, p6.getCompleto().indexOf("]") + 1);
+
             VisualizadorOSI.imprimirPanel("7 - APLICACION", "Recepción",
                     "Extracción del mensaje final ",
-                    p6.getCompleto(), p6.getCabecera(), p7);
+                    p6.getCompleto(),
+                    cabeceraAplicacion,
+                    p7);
 
             System.out.println("========================================================================");
             System.out.println(" MENSAJE ENTREGADO CON ÉXITO A: " + nombre);
@@ -213,11 +238,6 @@ public class Host {
             System.out.println("========================================================================\n");
 
         } catch (RuntimeException e) {
-            // Como le quitamos los "System.out.println" a las capas, si alguna tira un
-            // error
-            // (por ejemplo, si "PC-Intruso" intenta abrir un mensaje que no es suyo en la
-            // Capa 5),
-            // se captura aquí y se muestra
             System.out.println("\n========================================================================");
             System.out.println(" ERROR DETECTADO");
             System.out.println("------------------------------------------------------------------------");
