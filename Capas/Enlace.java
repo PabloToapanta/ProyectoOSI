@@ -4,22 +4,20 @@ import PDU.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Enlace {
-    private static final String NOMBRE_CAPA = "Enlace";
-    private static final String MAC_ORIGEN = "AA:BB:CC:DD:EE:01";
-    private static final String MAC_DESTINO = "AA:BB:CC:DD:EE:02";
+public class Enlace extends CapaOSI {
+    public Enlace(){
+        super("ENLACE");
+    }
+
 
     /**
      * Encapsula cada PDU de Red añadiendo cabecera MAC y código de integridad.
      */
-    public List<PDU> encapsular(List<PDU> pdusRed) {
-        List<PDU> tramas = new ArrayList<>();
+    public List<Trama> encapsular(List<Paquete> paquetesRed, String MAC_ORIGEN, String MAC_DESTINO) {
+        List<Trama> tramas = new ArrayList<>();
 
-        System.out.printf("ENVIO DESDE ENLACE (Capa 2):\nAgregando encabezado MAC y código de integridad a %d datagramas...\n", 
-            pdusRed.size());
-
-        for (int i = 0; i < pdusRed.size(); i++) {
-            PDU pduRed = pdusRed.get(i);
+        for (int i = 0; i < paquetesRed.size(); i++) {
+            PDU pduRed = paquetesRed.get(i);
             String datosRed = pduRed.getCompleto();
             
             // Calculamos el código de integridad
@@ -29,24 +27,20 @@ public class Enlace {
             String cabecera = String.format("[%s|MAC_origen=%s|MAC_destino=%s|Integridad=%d]",
                 NOMBRE_CAPA, MAC_ORIGEN, MAC_DESTINO, integridad);
             
-            tramas.add(new PDU(cabecera, datosRed));
+            tramas.add(new Trama(cabecera, datosRed));
 
-            System.out.printf("  Trama %d: Integridad calculada=%d, Tamaño trama=%d bytes\n", 
-                i + 1, integridad, cabecera.length() + datosRed.length() + 1);
         }
 
-        System.out.printf("Total de tramas generadas: %d\n\n", tramas.size());
+
         return tramas;
     }
 
     /**
      * Desencapsula eliminando cabecera MAC y verificando el código de integridad.
      */
-    public List<PDU> desencapsular(List<PDU> tramas) {
-        List<PDU> pdusRed = new ArrayList<>();
+    public List<Paquete> desencapsular(List<Trama> tramas) {
+        List<Paquete> pdusRed = new ArrayList<>();
 
-        System.out.printf("RECEPCION DESDE ENLACE (Capa 2):\nVerificando código de integridad y removiendo MAC de %d tramas...\n", 
-            tramas.size());
 
         for (int i = 0; i < tramas.size(); i++) {
             PDU trama = tramas.get(i);
@@ -74,12 +68,10 @@ public class Enlace {
             }
             
             // Reconstruir PDU de Red
-            pdusRed.add(new PDU("", datosRed));
-            System.out.printf("  Trama %d: Integridad válida (%d), Datagrama extraído\n", i + 1, integridadRecibida);
+            pdusRed.add(new Paquete("", datosRed));
         }
 
-        System.out.printf("Todas las tramas verificadas correctamente. Datagramas: %d\n\n", 
-            pdusRed.size());
+
         return pdusRed;
     }
 

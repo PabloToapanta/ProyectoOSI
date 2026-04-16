@@ -2,21 +2,21 @@ package Capas;
 
 import PDU.*;
 
-public class Sesion {
-    private static final String NOMBRE_CAPA = "SESION";
+public class Sesion extends CapaOSI {
+    public Sesion(){
+        super("SESION");
+    }
 
-    public PDU encapsular(PDU pduPresentacion, String hostOrigen, String hostDestino) {
+    public Datos encapsular(Datos pduPresentacion, String hostOrigen, String hostDestino) {
         String cabecera = String.format("[%s|origen=%s|destino=%s]", 
                                         NOMBRE_CAPA, hostOrigen, hostDestino);
-        PDU pduSesion = new PDU(cabecera, pduPresentacion.getCompleto());
+        Datos pduSesion = new Datos(cabecera, pduPresentacion.getCompleto());
         
-        System.out.println("ENVIO DESDE " + NOMBRE_CAPA + " (Capa 5): Sesión establecida entre " + hostOrigen + " y " + hostDestino);
-        System.out.println("PDU Sesion: " + pduSesion.getCompleto() + "\n");
         return pduSesion;
     }
 
-    public PDU desencapsular(PDU pduSesion, String nombreHostActual) {
-        // Los datos de sesión vienen con formato: [SESION|origen=...|destino=...]|[PRESENTACION|...]|...
+    public Datos desencapsular(Datos pduSesion, String nombreHostActual) {
+  
         String datosCompletos = pduSesion.getDatos();
         
         // Extraer la cabecera de SESION
@@ -40,18 +40,15 @@ public class Sesion {
             }
         }
 
-        System.out.println("RECEPCION DESDE " + NOMBRE_CAPA + " (Capa 5):");
-        System.out.println("Validando destinatario: Esperado=" + destinoEsperado + ", Actual=" + nombreHostActual);
 
         if (!destinoEsperado.equals(nombreHostActual)) {
             throw new RuntimeException("ERROR DE SESIÓN: Este paquete estaba dirigido a '" + 
                                        destinoEsperado + "' pero fue interceptado por '" + nombreHostActual + "'.");
         }
 
-        System.out.println("Sesión validada correctamente. El receptor autorizado ha recibido los datos.\n");
-        
+
         // Pasar los datos sin la cabecera de SESION
         String datosParaPresentacion = datosCompletos.substring(finCabecera + 2);
-        return new PDU("", datosParaPresentacion);
+        return new Datos("", datosParaPresentacion);
     }
 }

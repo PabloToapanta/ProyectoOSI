@@ -10,8 +10,8 @@ import java.io.Serializable;
 public class PDU implements Serializable {
     private static final long serialVersionUID = 1L;
     
-    private String cabecera;
-    private String datos;
+    protected String cabecera;
+    protected String datos;
     
     public PDU(String cabecera, String datos) {
         this.cabecera = cabecera;
