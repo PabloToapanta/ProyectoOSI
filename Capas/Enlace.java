@@ -4,6 +4,11 @@ import PDU.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Implementación de la Capa 2 (Enlace de Datos) del modelo OSI.
+ * Con responsabilida de creacion de tramas y control basico de errores
+ */
 public class Enlace extends CapaOSI {
     public Enlace(){
         super("ENLACE");
@@ -11,8 +16,12 @@ public class Enlace extends CapaOSI {
 
 
     /**
-     * Encapsula cada PDU de Red añadiendo cabecera MAC y código de integridad.
-     */
+     * Proceso de entramado y direccionamiento físico (Flujo descendente).
+     * @param paquetesRed Lista de PDUs de la capa de red (Paquetes).
+     * @param MAC_ORIGEN Dirección física de la interfaz de red emisora.
+     * @param MAC_DESTINO Dirección física de la interfaz de red receptora.
+     * @return Lista de Tramas listas para ser enviadas al medio físico.
+     */ 
     public List<Trama> encapsular(List<Paquete> paquetesRed, String MAC_ORIGEN, String MAC_DESTINO) {
         List<Trama> tramas = new ArrayList<>();
 
@@ -23,10 +32,11 @@ public class Enlace extends CapaOSI {
             // Calculamos el código de integridad
             int integridad = calcularIntegridad(datosRed);
             
-            
+            //Inyeccion de cabecera
             String cabecera = String.format("[%s|MAC_origen=%s|MAC_destino=%s|Integridad=%d]",
                 NOMBRE_CAPA, MAC_ORIGEN, MAC_DESTINO, integridad);
             
+            // Creacion de la lista
             tramas.add(new Trama(cabecera, datosRed));
 
         }
@@ -36,7 +46,10 @@ public class Enlace extends CapaOSI {
     }
 
     /**
-     * Desencapsula eliminando cabecera MAC y verificando el código de integridad.
+     * Proceso de validación de tramas y detección de errores (Flujo ascendente).
+     * @param tramas Lista de tramas recibidas desde la capa física.
+     * @return Lista de Paquetes validados y libres de cabeceras físicas.
+     * @throws RuntimeException Si se detecta corrupción en los datos durante la transmisión.
      */
     public List<Paquete> desencapsular(List<Trama> tramas) {
         List<Paquete> pdusRed = new ArrayList<>();
@@ -48,7 +61,8 @@ public class Enlace extends CapaOSI {
             
             // Extraer el código de Integridad de la cabecera
             String cabecera = trama.getCabecera();
-            // Buscamos la palabra "Integridad=" en lugar de "FCS="
+
+            // Buscamos la palabra "Integridad=" 
             int indiceIntegridad = cabecera.indexOf("Integridad=") + "Integridad=".length();
             int indiceIntegridadFin = cabecera.indexOf("]");
             int integridadRecibida = Integer.parseInt(cabecera.substring(indiceIntegridad, indiceIntegridadFin));
@@ -75,6 +89,11 @@ public class Enlace extends CapaOSI {
         return pdusRed;
     }
 
+    /**
+     * Metodo para calcular el código de integridad..
+     * @param datos Cadena de datos sobre la cual calcular el hash.
+     * @return Valor entero representativo de la estructura exacta de los datos.
+     */
     private int calcularIntegridad(String datos) {
         return datos.length() * 123 + 456;
     }

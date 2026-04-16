@@ -2,12 +2,27 @@ package Capas;
 
 import PDU.*;
 
+/**
+ * Implementación de la Capa 5 (Sesión) del modelo OSI.
+ * Se encarga de establecer, administrar y finalizar las conexiones de comunicación 
+ * lógica entre los sistemas locales y remotos. En esta arquitectura, implementa 
+ * el control de acceso verificando la legitimidad del receptor.
+ */
 public class Sesion extends CapaOSI {
     public Sesion(){
         super("SESION");
     }
 
+
+    /**
+     * Establecimiento de la sesión lógica (Flujo descendente).
+     * @param pduPresentacion PDU proveniente de la capa superior.
+     * @param hostOrigen Identificador del nodo transmisor.
+     * @param hostDestino Identificador del nodo receptor esperado.
+     * @return PDU (Datos) con la información de enrutamiento lógico adjunta.
+     */
     public Datos encapsular(Datos pduPresentacion, String hostOrigen, String hostDestino) {
+        // Generación de cabecera de sesión para el control del diálogo.
         String cabecera = String.format("[%s|origen=%s|destino=%s]", 
                                         NOMBRE_CAPA, hostOrigen, hostDestino);
         Datos pduSesion = new Datos(cabecera, pduPresentacion.getCompleto());
@@ -15,11 +30,19 @@ public class Sesion extends CapaOSI {
         return pduSesion;
     }
 
+
+    /**
+     * Validación y mantenimiento de la sesión lógica (Flujo ascendente).
+     * @param pduSesion PDU recibida desde la capa de transporte.
+     * @param nombreHostActual Identificador del nodo que está procesando la recepción.
+     * @return PDU (Datos) con la carga útil limpia para la capa de presentación.
+     * @throws RuntimeException Si se detecta una violación de seguridad o intercepción.
+     */
     public Datos desencapsular(Datos pduSesion, String nombreHostActual) {
   
         String datosCompletos = pduSesion.getDatos();
         
-        // Extraer la cabecera de SESION
+        // Extracción y validación de la cabecera de sesión.
         int finCabecera = datosCompletos.indexOf("]");
         if (finCabecera == -1) {
             throw new RuntimeException("Error: No se encontró cabecera de SESION");
@@ -28,7 +51,7 @@ public class Sesion extends CapaOSI {
         String cabecera = datosCompletos.substring(0, finCabecera + 1);
         String destinoEsperado = "";
         
-        // Extraer el destino de la cabecera
+        // Análisis de la cadena de metadatos para extraer el parámetro "destino".
         String[] partes = cabecera.split("\\|");
         for(String parte : partes) {
             if(parte.startsWith("destino=")) {
@@ -40,7 +63,9 @@ public class Sesion extends CapaOSI {
             }
         }
 
-
+        // Lógica de validación de seguridad (Control de acceso).
+        // Si el host físico actual no coincide con el destinatario lógico de la sesión,
+        // se interrumpe inmediatamente la cadena de desencapsulación
         if (!destinoEsperado.equals(nombreHostActual)) {
             throw new RuntimeException("ERROR DE SESIÓN: Este paquete estaba dirigido a '" + 
                                        destinoEsperado + "' pero fue interceptado por '" + nombreHostActual + "'.");
